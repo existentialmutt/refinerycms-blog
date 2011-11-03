@@ -5,3 +5,4 @@ group :development, :test do
   gem 'mysql2'
   gem 'pg'
 end
+gem 'delayed_job'
