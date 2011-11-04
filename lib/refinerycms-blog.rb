@@ -1,4 +1,5 @@
 require 'filters_spam'
+require 'pingback_server'
 
 module Refinery
   module Blog
@@ -19,6 +20,7 @@ module Refinery
     class Engine < Rails::Engine
       initializer 'blog serves assets' do |app|
         app.middleware.insert_after ::ActionDispatch::Static, ::ActionDispatch::Static, "#{root}/public"
+        app.middleware.use Rack::RPC::Endpoint, PingbackServer.new
       end
 
       config.to_prepare do
