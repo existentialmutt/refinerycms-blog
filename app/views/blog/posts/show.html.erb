@@ -65,3 +65,7 @@
   <script src="http://w.sharethis.com/button/buttons.js"></script>
   <script>stLight.options({publisher:'<%= BlogPost::ShareThis.key %>'});</script>
 <% end if BlogPost::ShareThis.enabled? %>
+
+<%- content_for :meta do %>
+  <link rel="pingback" href="<%= pingback_server_url %>" />
+<%- end %>

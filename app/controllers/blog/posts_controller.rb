@@ -6,6 +6,7 @@ module Blog
     before_filter :find_tags
 
     respond_to :html, :js, :rss
+    include BlogPostsHelper
 
     def index
       # Rss feeders are greedy. Let's give them every blog post instead of paginating.
@@ -17,6 +18,7 @@ module Blog
     end
 
     def show
+      headers["X-Pingback"] = pingback_server_url
       @blog_comment = BlogComment.new
       @canonical = url_for(:locale => ::Refinery::I18n.default_frontend_locale) if canonical?
       

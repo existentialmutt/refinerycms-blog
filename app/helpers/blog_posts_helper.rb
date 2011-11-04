@@ -56,4 +56,8 @@ module BlogPostsHelper
       }).html_safe
     end
   end
+
+  def pingback_server_url
+    request.protocol+request.host+':'+request.port.to_s+'/rpc'
+  end
 end
