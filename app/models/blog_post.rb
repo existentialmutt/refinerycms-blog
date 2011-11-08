@@ -13,7 +13,7 @@ class BlogPost < ActiveRecord::Base
     parsed = Nokogiri::HTML(blog_post.body)
     links = parsed.css('a[href]')
     links.each do |link|
-      blog_post.delay.send_pingback(link['href'])
+      blog_post.send_pingback(link['href'])
     end
   end
 
@@ -151,6 +151,7 @@ class BlogPost < ActiveRecord::Base
         pingback_url = URI.parse node['href']
       end
     end
+    handle_asynchronously :send_pingback
 
     #send the XML-RPC request if we have a url
     if pingback_url
