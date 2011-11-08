@@ -9,7 +9,7 @@ class Pingback < ActiveRecord::Base
   validates :source_uri, :presence => true, :uniqueness => {:scope => :blog_post_id}
 
   # Process an incoming ping request and return the status code if appropriate
-  def self.ping(source_uri, target_uri)
+  def self.receive_ping(source_uri, target_uri)
     # get the blog post by parsing the target uri and create a pingback
     # debugger
     if target_uri =~ /http:\/\/#{Rails.application.routes.default_url_options[:host]}\/blog\/(.+)/

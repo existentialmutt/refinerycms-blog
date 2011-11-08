@@ -1,17 +1,21 @@
 require 'acts-as-taggable-on'
 require 'seo_meta'
 require 'nokogiri'
+# for pingback
+require 'net/http'
+require 'uri'
+require 'xmlrpc/client'
 
 class BlogPost < ActiveRecord::Base
 
-  # after_save do |blog_post|
-  # # send pingbacks to links in the body
-  #   parsed = Nokogiri::HTML(blog_post.body)
-  #   links = parsed.css('a[href]')
-  #   links.each do |link|
-  #     BlogPost::Pingback.ping(link.attributes['href'], blog_post)
-  #   end
-  # end
+  after_save do |blog_post|
+  # send pingbacks to links in the body
+    parsed = Nokogiri::HTML(blog_post.body)
+    links = parsed.css('a[href]')
+    links.each do |link|
+      blog_post.delay.send_pingback(link['href'])
+    end
+  end
 
   is_seo_meta if self.table_exists?
 
@@ -25,6 +29,8 @@ class BlogPost < ActiveRecord::Base
 
   has_many :categorizations, :dependent => :destroy
   has_many :categories, :through => :categorizations, :source => :blog_category
+
+  has_many :pingbacks, :order => "created_at ASC"
 
   acts_as_indexed :fields => [:title, :body]
 
@@ -132,38 +138,37 @@ class BlogPost < ActiveRecord::Base
       return false
   end
 
-  module Pingback
-    require 'net/http'
-    require 'uri'
-    require 'xmlrpc/client'
-  
-    class << self
-      def ping(their_url, post)
-        #TODO make async with delayed job
-        response = Net::HTTP.get_response URI.parse(their_url)
+  def send_pingback(their_url)
+    response = Net::HTTP.get_response URI.parse(their_url)
 
-        #Look for the Pingback server in the HTTP header
-        if response['X-Pingback'] #TODO validate URI
-          pingback_url = response['X-Pingback']
-        else
-          # Look for the Pingback server in the response body
-          parsed = Nokogiri::HTML(response.body)
-          if node = parsed.at_css('link[rel=pingbak')
-            pingback_url = node.attributes['href']
-          end
-        end
-
-        #send the XML-RPC request if we have a url
-        if pingback_url
-          rpc_server = XMLRPC::Client.new URI.parse(pingback_url)
-          result = rpc_server.call("pingback.ping", their_url, "http://www.google.com") #TODO need someway to get the uri of our post
-          logger.info "Pingback server for #{their_url} responded with #{result}"
-        else
-          logger.info "No pingback server found for #{their_url}"
-        end
-
+    #Look for the Pingback server in the HTTP header
+    if response['X-Pingback'] 
+      pingback_url = URI.parse response['X-Pingback']
+    else
+      # Look for the Pingback server in the response body
+      parsed = Nokogiri::HTML(response.body)
+      if node = parsed.at_css('link[rel=pingback]')
+        pingback_url = URI.parse node['href']
       end
+    end
+
+    #send the XML-RPC request if we have a url
+    if pingback_url
+      logger.info "sending pingback for #{their_url} from #{url} using server url #{pingback_url}" 
+      rpc_client = XMLRPC::Client.new pingback_url.host, pingback_url.path, pingback_url.port, nil, nil, nil, nil, nil, 300000
+      begin
+        result = rpc_client.call("pingback.ping", their_url, url) 
+        logger.info "Pingback to #{their_url} succeeded with #{result}"
+      rescue RuntimeError, SocketError, XMLRPC::FaultException => e
+        logger.info "Pingback to #{their_url} failed with #{e.message}"
+      end
+    else
+      logger.info "No pingback server found for #{their_url}"
+    end
   end
 
+  def url
+    Rails.application.routes.url_helpers.blog_post_url(self)
   end
+
 end

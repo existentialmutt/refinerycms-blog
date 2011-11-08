@@ -8,7 +8,7 @@ class PingbackServer < Rack::RPC::Server
   rpc 'hello_world' => :hello_world
 
   def pingback_ping(source_uri, target_uri)
-    error_code, message = Pingback.ping(source_uri, target_uri)
+    error_code, message = Pingback.receive_ping(source_uri, target_uri)
     raise XMLRPC::FaultException.new(error_code, message) if error_code
     message
   end

@@ -213,5 +213,16 @@ describe BlogPost do
     end
     
   end
+
+  describe "Pingback" do
+    
+    it "sends pingback notification to links in the blog body" do
+      post = Factory.build(:blog_post, :body => "<a href='http://www.dumblog.com'>A link to a blog</a>")
+      BlogPost.should_receive(:ping).with('http://www.dumlog.com', post)
+      post.save
+    end
+
+  end
+
   
 end

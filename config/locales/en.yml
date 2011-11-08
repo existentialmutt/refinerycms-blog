@@ -108,6 +108,8 @@ en:
       archives: Archives
       tags:
         title: "Tags"
+      pingbacks:
+        none: no pingbacks
     categories:
       show:
         no_posts: There are no posts here yet.
@@ -128,6 +130,7 @@ en:
           title: Comments
           add: Make a Comment
         other: Other Blog Posts
+        pingbacks: Pingbacks
         filed_in: Filed in
         tagged: Tagged
         submit: Send comment

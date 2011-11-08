@@ -3,6 +3,19 @@
     <%= render 'post' %>
   </div>
 
+    <aside id="pingbacks">
+      <h2><%= t(".pingbacks") %></h2>
+      <% if @blog_post.pingbacks.any? -%>
+        <ul>
+          <% @blog_post.pingbacks.each do |pingback| -%>
+            <li><%= link_to (pingback.title.blank? ? pingback.source_uri : pingback.title), pingback.source_uri %></li>
+          <% end -%>
+        </ul>
+      <% else -%>
+        <p><%= t('none', :scope => 'blog.shared.pingbacks') %></p>
+      <% end -%>
+    </aside>
+
   <% if BlogPost.comments_allowed? %>
     <aside id="comments">
       <h2><%= t('.comments.title') %></h2>

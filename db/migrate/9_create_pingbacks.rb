@@ -8,6 +8,7 @@ class CreatePingbacks < ActiveRecord::Migration
     end
 
     add_index :pingbacks, [:blog_post_id, :source_uri]
+    add_index :pingbacks, [:blog_post_id, :created_at]
   end
 
   def self.down
