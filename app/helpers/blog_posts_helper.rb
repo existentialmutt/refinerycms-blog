@@ -58,6 +58,8 @@ module BlogPostsHelper
   end
 
   def pingback_server_url
-    request.protocol+request.host+':'+request.port.to_s+'/rpc'
+    result = request.protocol+request.host
+    result += ':'+request.port.to_s unless request.port == 80
+    result + '/rpc'
   end
 end
