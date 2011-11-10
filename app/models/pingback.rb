@@ -19,8 +19,14 @@ class Pingback < ActiveRecord::Base
 
 
     # validate the pingback and return appropriate error codes if invalid
-    return logger.warn "Pingback: Target post not found" and [32, "Target Post could not be found"] unless pingback
-    return logger.warn "Pingback: pingback already exists" and [48, "Pingback already exists for this source and target"] unless pingback.source_uri_is_unique_for_this_post?
+    unless pingback
+      logger.warn "Pingback: Target post not found"
+      [32, "Target Post could not be found"] 
+    end
+    unless pingback.source_uri_is_unique_for_this_post?
+      logger.warn "Pingback: pingback already exists" 
+      [48, "Pingback already exists for this source and target"]
+    end
     begin
       # get the source content
       response = Net::HTTP.get_response URI.parse(source_uri)
