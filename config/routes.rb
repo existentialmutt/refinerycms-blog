@@ -1,8 +1,6 @@
 ::Refinery::Application.routes.draw do
   scope(:path => 'blog', :module => 'blog') do
     root :to => 'posts#index', :as => 'blog_root'
-    require 'ruby-debug'
-    # mount Rack::RPC::Endpoint.new(ActionController::Dispatcher.new, PingbackServer.new) => 'pingback'
     match 'feed.rss', :to => 'posts#index', :as => 'blog_rss_feed', :defaults => {:format => "rss"}
     match ':id', :to => 'posts#show', :as => 'blog_post'
     match 'categories/:id', :to => 'categories#show', :as => 'blog_category'
