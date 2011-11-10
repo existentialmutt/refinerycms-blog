@@ -169,6 +169,7 @@ class BlogPost < ActiveRecord::Base
       Delayed::Worker.logger.warn "No pingback server found for #{their_url}"
     end
   end
+  handle_asynchronously :send_pingback
 
   def url
     Rails.application.routes.url_helpers.blog_post_url(self)
