@@ -11,6 +11,7 @@ class Pingback < ActiveRecord::Base
   # Process an incoming ping request and return the status code if appropriate
   def self.receive_ping(source_uri, target_uri)
     # get the blog post by parsing the target uri and create a pingback
+    logger.warn "Received pingback for #{target_uri} from #{source_uri}"
     if target_uri =~ /http:\/\/#{Rails.application.routes.default_url_options[:host]}\/blog\/(.+)/
       target_post = BlogPost.find($1)
       pingback = Pingback.new(:source_uri => source_uri, :post => target_post)
@@ -18,13 +19,14 @@ class Pingback < ActiveRecord::Base
 
 
     # validate the pingback and return appropriate error codes if invalid
-    return [32, "Target Post could not be found"] unless pingback
-    return [48, "Pingback already exists for this source and target"] unless pingback.source_uri_is_unique_for_this_post?
+    return logger.warn "Pingback: Target post not found" and [32, "Target Post could not be found"] unless pingback
+    return logger.warn "Pingback: pingback already exists" and [48, "Pingback already exists for this source and target"] unless pingback.source_uri_is_unique_for_this_post?
     begin
       # get the source content
       response = Net::HTTP.get_response URI.parse(source_uri)
       #parse it for links to us
       unless target_post.html_links_here?(response.body)
+        logger.warn "Pingback: SourceURI doesn'y link here"
         return [17, "Source URI doesn't link to Target"]
       end
       
@@ -32,11 +34,13 @@ class Pingback < ActiveRecord::Base
       parsed = Nokogiri::HTML(response.body)
       pingback.title = parsed.at_css('title').content
     rescue SocketError, Net::HTTPError => e
+      logger.warn "Pingback: unable to fetch source_uri"
       return [16, "Source URI could not be fetched"]
     end
 
     #save the pingback
     return [0, "Pingback not registered"] unless pingback.save
+    logger.warn "Pingback success!"
     return [nil, "#{target_uri} registered pingback from #{source_uri}"]
   end
 
