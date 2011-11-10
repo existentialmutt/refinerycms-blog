@@ -10,8 +10,8 @@ class Pingback < ActiveRecord::Base
 
   # Process an incoming ping request and return the status code if appropriate
   def self.receive_ping(source_uri, target_uri)
+    logger.info "Received pingback for #{target_uri} from #{source_uri}"
     # get the blog post by parsing the target uri and create a pingback
-    # debugger
     if target_uri =~ /http:\/\/#{Rails.application.routes.default_url_options[:host]}\/blog\/(.+)/
       target_post = BlogPost.find($1)
       pingback = Pingback.new(:source_uri => source_uri, :post => target_post)
@@ -24,7 +24,6 @@ class Pingback < ActiveRecord::Base
     begin
       # get the source content
       response = Net::HTTP.get_response URI.parse(source_uri)
-      # debugger
       #parse it for links to us
       unless target_post.html_links_here?(response.body)
         return [17, "Source URI doesn't link to Target"]
