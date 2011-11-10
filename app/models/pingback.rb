@@ -10,7 +10,6 @@ class Pingback < ActiveRecord::Base
 
   # Process an incoming ping request and return the status code if appropriate
   def self.receive_ping(source_uri, target_uri)
-    logger.info "Received pingback for #{target_uri} from #{source_uri}"
     # get the blog post by parsing the target uri and create a pingback
     if target_uri =~ /http:\/\/#{Rails.application.routes.default_url_options[:host]}\/blog\/(.+)/
       target_post = BlogPost.find($1)
