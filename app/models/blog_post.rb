@@ -14,8 +14,8 @@ class BlogPost < ActiveRecord::Base
     parsed = Nokogiri::HTML(blog_post.body)
     links = parsed.css('a[href]')
     links.each do |link|
-      logger.info "Sending pingback to #{link['href']}"
-      blog_post.delay.send_pingback(link['href'])
+      logger.warn "Sending pingback to #{link['href']}"
+      blog_post.send_pingback(link['href'])
     end
   end
 
@@ -161,12 +161,12 @@ class BlogPost < ActiveRecord::Base
       rpc_client = XMLRPC::Client.new pingback_url.host, pingback_url.path, pingback_url.port, nil, nil, nil, nil, nil, 300000
       begin
         result = rpc_client.call("pingback.ping", their_url, url) 
-        logger.info "Pingback to #{their_url} succeeded with #{result}"
+        Delayed::Worker.logger.warn "Pingback to #{their_url} succeeded with #{result}"
       rescue RuntimeError, SocketError, XMLRPC::FaultException => e
-        logger.info "Pingback to #{their_url} failed with #{e.message}"
+        Delayed::Worker.logger.warn "Pingback to #{their_url} failed with #{e.message}"
       end
     else
-      logger.info "No pingback server found for #{their_url}"
+      Delayed::Worker.logger.warn "No pingback server found for #{their_url}"
     end
   end
 
